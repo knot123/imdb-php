@@ -6,7 +6,7 @@
  * @class Imdbphp_Base
  * @author http://code.google.com/p/imdb-php/
  * @license    http://www.opensource.org/licenses/bsd-license.php     New BSD License
- * @version 0.9.0
+ * @version 0.9.1
  */
 class Imdbphp_Base {
 	/**#@+
@@ -38,7 +38,7 @@ class Imdbphp_Base {
 	 * Default is en_US.
 	 * Possible Locales are: en_US, de_DE, fr_FR, pt_PT, it_IT.
 	 */
-	protected $_locale;
+	protected $_locale = "en_US";
 	/**#@-*/
 	
 	####################################################
@@ -50,13 +50,10 @@ class Imdbphp_Base {
 	 * @param  string     $locale 		(Optional) Localization Parameter in the Format en_US.
 	 * @return Imdbphp_Base
 	 */
-	public function __construct($locale = null) 
+	public function __construct() 
 	{	
 		// sets the default timezon so no php warning appears
 		date_default_timezone_set('America/New_York');
-		
-		// assign the values to the class properties
-		$this->setLocale($locale);
 		
 		if (! $this->statusCheck())
 		{
@@ -69,8 +66,6 @@ class Imdbphp_Base {
 	####################################################
 	/**
 	 * Resets the current locale. 
-	 * 
-	 * Defaults to en_US, if nothing is specified.
 	 *
 	 * @param string $locale 		(Optional) Localization Parameter in the Format en_US.
 	 */
@@ -78,17 +73,27 @@ class Imdbphp_Base {
 	{
 		if($locale)
 		{
-			if (! preg_match("/^[a-z]{2}(((\-|\_)[A-Z]{2}){1,2})?$/", $locale)) 
+			if (! preg_match("/^[a-z]{2}(((-|_)[A-Z]{2}){1,2})?$/", $locale)) 
 			{
-				throw new Exception ( 'setLocale(): Format should be xx_XX. For example en_US.' );
+				throw new Exception ( __METHOD__ . ': Format should be xx_XX. For example en_US.' );
 			} else {
 				$this->_locale = ( string ) $locale;
 			}		
-		} else {
-			$this->_locale = "en_US";
+		}
+		else
+		{
+		    $this->_locale = 'en_US';
 		}
 	}
-	
+	/**
+	 * Return the current locale. 
+	 *
+	 * @return string	Returns current locale
+	 */
+	public function getLocale()
+	{
+	    return $this->_locale;
+	}
 	/**
 	 * Checks the availability of the IMDb iPhone API. 
 	 *
@@ -101,7 +106,7 @@ class Imdbphp_Base {
 			$json = json_decode($this->makeRequest());
 			return (strcmp( $json->{'data'}->{'status'}, "ok" ) == 0) ? true : false;
 		} else {
-			throw new Exception ( "statusCheck(): There is no json_decode() present. Check your php installation." );
+			throw new Exception ( __METHOD__ . ": There is no json_decode() present. Check your php installation." );
 		}
 	}
 		
@@ -131,9 +136,9 @@ class Imdbphp_Base {
 			$json = file_get_contents($signedUrl,0,null,null);
 			if(! $json )
 			{
-				throw new Exception ( "makeRequest(): There is a problem with file_get_contents()." );
+				throw new Exception ( __METHOD__ . ": There is a problem with file_get_contents()." );
 			} else if( ! json_decode($json) ) {
-				throw new Exception ( "makeRequest(): There is a problem in the json string." );
+				throw new Exception ( __METHOD__ . ": There is a problem in the json string." );
 			} else {
 				return $json;
 			}
@@ -173,7 +178,7 @@ class Imdbphp_Base {
 	protected function createBaseUrl($function, $parameter) {
 		if( ! $function || ! $parameter )
 		{
-			throw new Exception ( "createBaseUrl(): Function and parameter are required." );
+			throw new Exception ( __METHOD__ . ": Function and parameter are required." );
 		} else {
 			$baseUrl = 			'http://'
 								. $this->_host
@@ -202,7 +207,7 @@ class Imdbphp_Base {
 	protected function createSignedUrl($baseUrl) {
 		if( ! $baseUrl )
 		{
-			throw new Exception ( "createSignedUrl(): The base url is required." );
+			throw new Exception ( __METHOD__ . ": The base url is required." );
 		} else {
 			return $baseUrl . '-' . hash_hmac('sha1', $baseUrl, $this->_apiKey);
 		}

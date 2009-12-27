@@ -8,7 +8,7 @@
  * @extends Imdbphp_Base
  * @author http://code.google.com/p/imdb-php/
  * @license    http://www.opensource.org/licenses/bsd-license.php     New BSD License
- * @version 0.9.0
+ * @version 0.9.1
  */
 
 require_once (dirname(__FILE__)."/Base.php");
@@ -20,17 +20,12 @@ class Imdbphp_Search extends Imdbphp_Base {
 	/**
 	 * Constructor method.
 	 * 
-	 * @param  string       $locale 		(Optional) Localization Parameter in the Format en_US.
 	 * @return Imdbphp_Search
 	 */
-	public function __construct($locale = null) 
+	public function __construct() 
 	{	
 		// call the parent constructor
-		if ($locale) {
-			parent::__construct( $locale );
-		} else {
-			parent::__construct();
-		}
+		parent::__construct();
 	}
 	
 	####################################################
@@ -46,7 +41,7 @@ class Imdbphp_Search extends Imdbphp_Base {
 	{
 		if(!$searchterm)
 		{
-			throw new Exception ('getSearchResults(): A searchterm is required.');
+			throw new Exception (__METHOD__ . ': A searchterm is required.');
 		} else {
 			$q['q'] = urlencode($searchterm);
 			return $this->makeRequest('/find', $q);
