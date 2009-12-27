@@ -6,8 +6,8 @@
  * @package Imdbphp
  * @class Imdbphp_Search
  * @extends Imdbphp_Base
- * @author John McClane
- * @copyright John McClane 2009
+ * @author http://code.google.com/p/imdb-php/
+ * @license    http://www.opensource.org/licenses/bsd-license.php     New BSD License
  * @version 0.9.0
  */
 
