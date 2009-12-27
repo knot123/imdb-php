@@ -1,0 +1,210 @@
+<?php
+/**
+ * The base class to interact with the IMDb iPhone API.
+ * 
+ * @package Imdbphp
+ * @class Imdbphp_Base
+ * @author John McClane
+ * @copyright John McClane 2009
+ * @version 0.9.0
+ */
+class Imdbphp_Base {
+	/**#@+
+	 *
+	 * @var string
+	 */
+	/**
+	 * Hardcoded Api Version.
+	 */
+	protected $_api = "v1";
+	/**
+	 * Hardcoded Application Identification.
+	 */
+	protected $_appId = "iphone1";
+	/**
+	 * Hardcoded Private Api Key which is needed to sign the requests.
+	 */
+	protected $_apiKey = "2wex6aeu6a8q9e49k7sfvufd6rhh0n";
+	/**
+	 * Hardcoded API Host.
+	 */
+	protected $_host = "app.imdb.com";
+	/**
+	 * Hardcoded API Policy.
+	 */
+	protected $_apiPolicy = "app1";
+	/**
+	 * Locale.
+	 * Default is en_US.
+	 * Possible Locales are: en_US, de_DE, fr_FR, pt_PT, it_IT.
+	 */
+	protected $_locale;
+	/**#@-*/
+	
+	####################################################
+	# OVERRIDDEN METHODS                               #
+	####################################################
+	/**
+	 * Constructor method.
+	 * 
+	 * @param  string     $locale 		(Optional) Localization Parameter in the Format en_US.
+	 * @return Imdbphp_Base
+	 */
+	public function __construct($locale = null) 
+	{	
+		// sets the default timezon so no php warning appears
+		date_default_timezone_set('America/New_York');
+		
+		// assign the values to the class properties
+		$this->setLocale($locale);
+		
+		if (! $this->statusCheck())
+		{
+			throw new Exception ( 'statusCheck(): Something is not ok. Use getHello() for more information.' );
+		}
+	}
+	
+	####################################################
+	# PUBLIC METHODS                                   #
+	####################################################
+	/**
+	 * Resets the current locale. 
+	 * 
+	 * Defaults to en_US, if nothing is specified.
+	 *
+	 * @param string $locale 		(Optional) Localization Parameter in the Format en_US.
+	 */
+	public function setLocale($locale = null) 
+	{
+		if($locale)
+		{
+			if (! preg_match("/^[a-z]{2}(((\-|\_)[A-Z]{2}){1,2})?$/", $locale)) 
+			{
+				throw new Exception ( 'setLocale(): Format should be xx_XX. For example en_US.' );
+			} else {
+				$this->_locale = ( string ) $locale;
+			}		
+		} else {
+			$this->_locale = "en_US";
+		}
+	}
+	
+	/**
+	 * Checks the availability of the IMDb iPhone API. 
+	 *
+	 * @return bool Returns true if everything is alright, false if something is wrong.
+	 */
+	public function statusCheck() 
+	{
+		if ( function_exists('json_decode') )
+		{
+			$json = json_decode($this->makeRequest());
+			return (strcmp( $json->{'data'}->{'status'}, "ok" ) == 0) ? true : false;
+		} else {
+			throw new Exception ( "statusCheck(): There is no json_decode() present. Check your php installation." );
+		}
+	}
+		
+	###########################################################
+	# PROTECTED METHOD                                        #
+	###########################################################
+	/**
+	 * Makes the Request
+	 * 
+	 * This internal method is called by every function which makes an request to the IMDb iPhone API.
+	 * It also checks if the request was successfull by text decoding the answer. The json_decode is required
+	 * in order to test.
+	 * 
+	 * @param  string $function   				The function which the request is regarded to.
+	 * @param  string $arguments    (Optional)	The additional arguments for the functions.
+	 * @return string 							Returns the content as a JSON formatted string.
+	 */
+	protected function makeRequest($function = "/hello", $arguments = null)
+	{
+		if (! function_exists('json_decode') )
+		{
+			throw new Exception ( "makeRequest(): There is no json_decode() present. Check your php installation." );
+		} else {
+			$parameter = $this->createParameter($arguments);
+			$baseUrl = $this->createBaseUrl($function, $parameter);
+			$signedUrl = $this->createSignedUrl($baseUrl);
+			$json = file_get_contents($signedUrl,0,null,null);
+			if(! $json )
+			{
+				throw new Exception ( "makeRequest(): There is a problem with file_get_contents()." );
+			} else if( ! json_decode($json) ) {
+				throw new Exception ( "makeRequest(): There is a problem in the json string." );
+			} else {
+				return $json;
+			}
+		}
+	}
+	
+	/**
+	 * Creates the parameter for the base url.
+	 * 
+	 * This internal method is called by makeRequest() in order to create all parameter and sort them.
+	 * 
+	 * @param  string $arguments    (Optional)	The additional arguments for the functions.
+	 * @return array 							Returns the parameter as a key-sorted array.
+	 */
+	protected function createParameter($arguments = null) {
+		$parameter['api'] = $this->_api;
+		$parameter['appid'] = $this->_appId;
+		$parameter['locale'] = $this->_locale;
+		$parameter['timestamp'] = time();
+		if(is_array($arguments))
+		{
+			$parameter = array_merge($parameter, $arguments);
+			ksort($parameter);
+		}
+		return $parameter;
+	}
+	
+	/**
+	 * Creates the base url with everything but the signature.
+	 * 
+	 * This internal method is called by makeRequest() in order to make the base url.
+	 * 
+	 * @param  string $function 	The function which the request is regarded to.
+	 * @param  string $parameter	The parameter for the url.
+	 * @return string 				Returns the base url ready to sign.
+	 */
+	protected function createBaseUrl($function, $parameter) {
+		if( ! $function || ! $parameter )
+		{
+			throw new Exception ( "createBaseUrl(): Function and parameter are required." );
+		} else {
+			$baseUrl = 			'http://'
+								. $this->_host
+								. $function
+								. '?';
+			foreach($parameter as $key => $value)
+			{
+				$baseUrl .= $key . '=' . $value . '&';
+			}
+			
+			$baseUrl		.= 'sig='
+							. $this->_apiPolicy;
+			return $baseUrl;
+		}
+	}
+	
+	/**
+	 * Creates the signed url.
+	 * 
+	 * It makes the sha1 hash of the base url and appends it to the base url.
+	 * This internal method is called by makeRequest() in order to sign the base url with the sha1.
+	 * 
+	 * @param  string $baseUrl	The base url which is to be signed.
+	 * @return string 			Returns the complete signed url.
+	 */
+	protected function createSignedUrl($baseUrl) {
+		if( ! $baseUrl )
+		{
+			throw new Exception ( "createSignedUrl(): The base url is required." );
+		} else {
+			return $baseUrl . '-' . hash_hmac('sha1', $baseUrl, $this->_apiKey);
+		}
+	}
+}
