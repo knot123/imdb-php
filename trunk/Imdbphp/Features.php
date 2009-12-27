@@ -20,17 +20,12 @@ class Imdbphp_Features extends Imdbphp_Base {
 	/**
 	 * Constructor method.
 	 * 
-	 * @param  string         $locale 		(Optional) Localization Parameter in the Format en_US.
 	 * @return Imdbphp_Features
 	 */
-	public function __construct($locale = null) 
+	public function __construct() 
 	{	
 		// call the parent constructor
-		if ($locale) {
-			parent::__construct( $locale );
-		} else {
-			parent::__construct();
-		}
+		parent::__construct();
 	}
 	
 	####################################################
@@ -57,7 +52,7 @@ class Imdbphp_Features extends Imdbphp_Base {
 	 * @param  string $date  	(Optional)  Date in the sql format "2009-12-24".
 	 * @return string  						JSON formatted string.
 	 */
-	public function getShowtimes($location, $date = null)
+	public function getShowTimes($location, $date = null)
 	{
 		// checks the given date or sets today
 		if( ! $this->checkDate($date))
@@ -68,7 +63,7 @@ class Imdbphp_Features extends Imdbphp_Base {
 		// checks the location or throws exception
 		if( ! $this->checkLocation($location))
 		{
-			throw new Exception ('getShowtimes(): A location is required.');
+			throw new Exception (__METHOD__ . ': A location is required.');
 		}
 		
 		$arg['date'] = $date;
@@ -89,18 +84,18 @@ class Imdbphp_Features extends Imdbphp_Base {
 	/**
 	 * Get current box office results for a specified region formatted as a JSON string.
 	 *
-	 * @param  string $boxofficeRegion	(Optional) 	The boxoffice region formatted in two character country code "US".
+	 * @param  string $boxOfficeRegion	(Optional) 	The boxoffice region formatted in two character country code "US".
 	 * @return string  								JSON formatted string.
 	 */
-	public function getBoxOfficeResults($boxofficeRegion = null)
+	public function getBoxOfficeResults($boxOfficeRegion = null)
 	{
-		// checks the given Boxoffice Region or sets "US"
-		if( ! $this->checkBoxofficeRegion($boxofficeRegion))
+		// checks the given Box Office Region or sets "US"
+		if( ! $this->checkBoxofficeRegion($boxOfficeRegion))
 		{
-			$boxofficeRegion = "US";
+			$boxOfficeRegion = "US";
 		}
 		
-		$arg['boxoffice_region'] = $boxofficeRegion;
+		$arg['boxoffice_region'] = $boxOfficeRegion;
 		return $this->makeRequest('/boxoffice', $arg);
 	}
 	
@@ -109,7 +104,7 @@ class Imdbphp_Features extends Imdbphp_Base {
 	 * 
 	 * @return string  JSON formatted string.
 	 */
-	public function getMoviemeter()
+	public function getMovieMeter()
 	{
 		return $this->makeRequest('/chart/moviemeter');
 	}
@@ -165,7 +160,7 @@ class Imdbphp_Features extends Imdbphp_Base {
 	 * 
 	 * @return string  JSON formatted string.
 	 */
-	public function getStarmeter()
+	public function getStarMeter()
 	{
 		return $this->makeRequest('/chart/starmeter');
 	}
@@ -216,7 +211,7 @@ class Imdbphp_Features extends Imdbphp_Base {
 			return false;
 		} else {
 			if(!preg_match('/^([A-Z]{2}),([0-9]{5})$/', $location)) {
-				throw new Exception ( 'checkLocation() expects a Location formatted like US,33333.' );
+				throw new Exception ( __METHOD__ . ': expects a Location formatted like US,33333.' );
 				return false;
 			}
 		}
@@ -238,7 +233,7 @@ class Imdbphp_Features extends Imdbphp_Base {
 			return false;
 		} else {
 			if(!preg_match('/^([1-3][0-9]{3,3})-(0?[1-9]|1[0-2])-(0?[1-9]|[1-2][1-9]|3[0-1])$/', $date)) {
-				throw new Exception ( 'checkDate() expects a SQL formatted date like 2009-12-24.' );
+				throw new Exception ( __METHOD__ . ': expects a SQL formatted date like 2009-12-24.' );
 				return false;
 			}
 		}
@@ -250,17 +245,17 @@ class Imdbphp_Features extends Imdbphp_Base {
 	 * 
 	 * If it is not valid it throws an exception.
 	 * 
-	 * @param  string $boxofficeRegion 	Boxoffice Region in following format "US".
+	 * @param  string $boxOfficeRegion 	Boxoffice Region in following format "US".
 	 * @return bool  					True if Boxoffice Region is alright. False if there is a problem with it.
 	 */
-	protected function checkBoxofficeRegion($boxofficeRegion)
+	protected function checkBoxOfficeRegion($boxOfficeRegion)
 	{
-		if(!$boxofficeRegion)
+		if(!$boxOfficeRegion)
 		{
 			return false;
 		} else {
-			if(!preg_match("/^([A-Z]{2})?$/", $boxofficeRegion)) {
-				throw new Exception ( 'checkBoxofficeRegion(): Format should be XX. For example US.' );
+			if(!preg_match("/^([A-Z]{2})?$/", $boxOfficeRegion)) {
+				throw new Exception ( __METHOD__ . ': Format should be XX. For example US.' );
 				return false;
 			}
 		}
