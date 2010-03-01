@@ -40,7 +40,14 @@ class Imdbphp_Features extends Imdbphp_Base {
 	 */
 	public function getHello()
 	{
-		return $this->makeRequest('/hello');
+		$arg['date'] = date("Y-m-d", time());
+		$arg['location'] = $location;
+		$arg['app_version'] = "1.1";
+		$arg['count'] = "1";
+		$arg['device_model'] = "iPhone";
+		$arg['system_name'] = "iPhone OS";
+		$arg['system_version'] = "3.1.2";
+		return $this->makeRequest('/hello', $arg);
 	}
 	
 	/**
@@ -120,6 +127,85 @@ class Imdbphp_Features extends Imdbphp_Base {
 	}
 	
 	/**
+	 * Get genre list formatted as a JSON string.
+	 * 
+	 * @return string  JSON formatted string.
+	 */
+	public function getGenres()
+	{
+		$arg['type'] = "genre";
+		return $this->makeRequest('/keys', $arg);
+	}
+	
+	/**
+	 * Get popular movies by genre formatted as a JSON string.
+	 * 
+	 * @param  string $genre Required genre.
+	 * @return string        JSON formatted string.
+	 */
+	public function getPopularMoviesByGenre($genre = "action")
+	{
+		$arg['genre'] = $genre;
+		return $this->makeRequest('/moviegenre', $arg);
+	}
+	
+	/**
+	 * Get the latest bottom 100 movies list formatted as a JSON string.
+	 * 
+	 * @return string  JSON formatted string.
+	 */
+	public function getBottom100Movies()
+	{
+		return $this->makeRequest('/chart/bottom');
+	}
+	
+	/**
+	 * Get the latest DVD & BluRay Releases formatted as a JSON string.
+	 * 
+	 * @return string  JSON formatted string.
+	 */
+	public function getDvdBlurayNewReleases($marketplace = "US")
+	{
+		$arg['date'] = date("Y-m-d", time());
+		$arg['marketplace'] = $marketplace;
+		return $this->makeRequest('/products/new_releases', $arg);
+	}
+	
+	/**
+	 * Get the latest DVD Bestsellers formatted as a JSON string.
+	 * 
+	 * @return string  JSON formatted string.
+	 */
+	public function getDvdBestsellers($marketplace = "US")
+	{
+		$arg['marketplace'] = $marketplace;
+		$arg['media'] = "dvd";
+		return $this->makeRequest('/products/bestsellers', $arg);
+	}
+	
+	/**
+	 * Get the latest BluRay Bestsellers formatted as a JSON string.
+	 * 
+	 * @return string  JSON formatted string.
+	 */
+	public function getBlurayBestsellers($marketplace = "US")
+	{
+		$arg['marketplace'] = $marketplace;
+		$arg['media'] = "blu_ray";
+		return $this->makeRequest('/products/bestsellers', $arg);
+	}
+	
+	/**
+	 * Get the all Best Picture Winners formatted as a JSON string.
+	 * 
+	 * @return string  JSON formatted string.
+	 */
+	public function getBestPictureWinners()
+	{
+		return $this->makeRequest('/feature/best_picture');
+	}
+	
+	/**
 	 * Get the tv program for a given night formatted as a JSON string.
 	 *
 	 * @param  string $date  (Optional) Date in the sql format "2009-12-24".
@@ -153,6 +239,16 @@ class Imdbphp_Features extends Imdbphp_Base {
 		
 		$arg['date'] = $date;
 		return $this->makeRequest('/tv/recap', $arg);
+	}
+	
+	/**
+	 * Get popular tv shows formatted as a JSON string.
+	 *
+	 * @return string  					JSON formatted string.
+	 */
+	public function getPopularTv($date = null)
+	{
+		return $this->makeRequest('/chart/tv');
 	}
 	
 	/**

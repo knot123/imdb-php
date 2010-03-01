@@ -20,7 +20,7 @@ class Imdbphp_Base {
 	/**
 	 * Hardcoded Application Identification.
 	 */
-	protected $_appId = "iphone1";
+	protected $_appId = "iphone1_1";
 	/**
 	 * Hardcoded Private Api Key which is needed to sign the requests.
 	 */
@@ -32,7 +32,7 @@ class Imdbphp_Base {
 	/**
 	 * Hardcoded API Policy.
 	 */
-	protected $_apiPolicy = "app1";
+	protected $_apiPolicy = "app1_1";
 	/**
 	 * Locale.
 	 * Default is en_US.
@@ -103,7 +103,14 @@ class Imdbphp_Base {
 	{
 		if ( function_exists('json_decode') )
 		{
-			$json = json_decode($this->makeRequest());
+			$arg['date'] = $date;
+			$arg['location'] = $location;
+			$arg['app_version'] = "1.1";
+			$arg['count'] = "1";
+			$arg['device_model'] = "iPhone";
+			$arg['system_name'] = "iPhone OS";
+			$arg['system_version'] = "3.1.2";
+			$json = json_decode($this->makeRequest('/hello', $arg));
 			return (strcmp( $json->{'data'}->{'status'}, "ok" ) == 0) ? true : false;
 		} else {
 			throw new Exception ( __METHOD__ . ": There is no json_decode() present. Check your php installation." );
@@ -121,27 +128,29 @@ class Imdbphp_Base {
 	 * in order to test.
 	 * 
 	 * @param  string $function   				The function which the request is regarded to.
-	 * @param  string $arguments    (Optional)	The additional arguments for the functions.
+	 * @param  string $arguments    			The additional arguments for the functions.
 	 * @return string 							Returns the content as a JSON formatted string.
 	 */
-	protected function makeRequest($function = "/hello", $arguments = null)
+	protected function makeRequest($function, $arguments = null)
 	{
 		if (! function_exists('json_decode') )
 		{
 			throw new Exception ( "makeRequest(): There is no json_decode() present. Check your php installation." );
+		} else if( !$function ) {
+			throw new Exception ( "makeRequest(): There is no function or argument present." );
 		} else {
 			$parameter = $this->createParameter($arguments);
-			$baseUrl = $this->createBaseUrl($function, $parameter);
-			$signedUrl = $this->createSignedUrl($baseUrl);
-			$json = file_get_contents($signedUrl,0,null,null);
-			if(! $json )
-			{
-				throw new Exception ( __METHOD__ . ": There is a problem with file_get_contents()." );
-			} else if( ! json_decode($json) ) {
-				throw new Exception ( __METHOD__ . ": There is a problem in the json string." );
-			} else {
-				return $json;
-			}
+    		$baseUrl = $this->createBaseUrl($function, $parameter);
+    		$signedUrl = $this->createSignedUrl($baseUrl);
+    		$json = file_get_contents($signedUrl,0,null,null);
+    		if(! $json )
+    		{
+    			throw new Exception ( __METHOD__ . ": There is a problem with file_get_contents()." );
+    		} else if( ! json_decode($json) ) {
+    			throw new Exception ( __METHOD__ . ": There is a problem in the json string." );
+    		} else {
+    			return $json;
+    		}
 		}
 	}
 	
@@ -156,6 +165,7 @@ class Imdbphp_Base {
 	protected function createParameter($arguments = null) {
 		$parameter['api'] = $this->_api;
 		$parameter['appid'] = $this->_appId;
+		$parameter['device'] = sha1(microtime(true));
 		$parameter['locale'] = $this->_locale;
 		$parameter['timestamp'] = time();
 		if(is_array($arguments))
